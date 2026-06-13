@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Resonance Archives</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:      #0d0c10;
+    --deep:     #141218;
+    --panel:    #1c1820;
+    --border:   #2e2640;
+    --gold:     #c9a84c;
+    --gold-dim: #7a6230;
+    --amber:    #e8832a;
+    --ivory:    #e8e0cc;
+    --muted:    #8a7f9a;
+    --glow:     #c9a84c33;
+  }
+
+  html, body {
+    background: var(--ink);
+    color: var(--ivory);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; flex-direction: column; align-items: center; min-height: 100dvh; }
+  .screen.active { display: flex; }
+
+  /* ══════════════════════════════════
+     INTRO / DOOR SCREEN
+  ══════════════════════════════════ */
+  #intro-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: #050408;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    min-height: unset;
+  }
+  #intro-screen.hidden { display: none; }
+
+  .door-scene {
+    position: relative;
+    width: min(420px, 90vw);
+    height: min(580px, 85vh);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Stone arch / frame */
+  .arch-frame {
+    position: absolute;
+    inset: 0;
+    border-radius: 50% 50% 0 0 / 30% 30% 0 0;
+    border: 3px solid #3a3050;
+    box-shadow:
+      inset 0 0 40px #00000088,
+      0 0 60px #0a0810,
+      0 0 2px #c9a84c22;
+    background: linear-gradient(180deg, #120e1a 0%, #0d0b12 100%);
+    overflow: hidden;
+  }
+
+  /* Glow from inside the door */
+  .arch-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 80%, #c9a84c0a 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  /* Stone arch details */
+  .arch-stones {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50% 50% 0 0 / 30% 30% 0 0;
+    border: 12px solid transparent;
+    border-image: none;
+    background:
+      linear-gradient(#1a1524, #1a1524) padding-box,
+      repeating-linear-gradient(
+        90deg,
+        #2a2040 0px, #2a2040 38px,
+        #221a34 38px, #221a34 40px
+      ) border-box;
+    pointer-events: none;
+  }
+
+  /* Left door panel */
+  .door-left, .door-right {
+    position: absolute;
+    top: 5%;
+    width: 48%;
+    height: 90%;
+    background: linear-gradient(180deg, #1a1424 0%, #110e1a 50%, #0e0c15 100%);
+    border: 1px solid #2a2040;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    transition: transform 2.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    overflow: hidden;
+  }
+  .door-left {
+    left: 2%;
+    transform-origin: left center;
+    border-right: none;
+  }
+  .door-right {
+    right: 2%;
+    transform-origin: right center;
+    border-left: none;
+  }
+
+  /* Door open states */
+  .door-left.open  { transform: perspective(600px) rotateY(-75deg); }
+  .door-right.open { transform: perspective(600px) rotateY(75deg); }
+
+  /* Door panel wood grain texture */
+  .door-grain {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      2deg,
+      transparent 0px, transparent 18px,
+      #ffffff04 18px, #ffffff04 19px
+    );
+    pointer-events: none;
+  }
+
+  /* Raised panels on door */
+  .door-panel-inner {
+    position: absolute;
+    left: 12%; right: 12%;
+    border: 1px solid #3a2e50;
+    box-shadow: inset 0 0 12px #00000044;
+  }
+  .door-panel-inner.top { top: 10%; height: 38%; }
+  .door-panel-inner.bottom { bottom: 10%; height: 38%; }
+
+  /* Musical note carvings on door */
+  .door-carving {
+    position: absolute;
+    font-size: 1.8rem;
+    color: #3a2e50;
+    opacity: 0.6;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Door handle / ring */
+  .door-handle {
+    position: absolute;
+    top: 50%;
+    width: 18px; height: 18px;
+    border: 2px solid #7a6230;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #c9a84c33;
+  }
+  .door-left .door-handle  { right: 8px; transform: translateY(-50%); }
+  .door-right .door-handle { left: 8px;  transform: translateY(-50%); }
+
+  /* Keyhole */
+  .keyhole {
+    position: absolute;
+    bottom: 48%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px; height: 12px;
+    background: #080610;
+    border-radius: 50% 50% 0 0;
+    box-shadow: 0 0 4px #c9a84c55;
+    pointer-events: none;
+  }
+  .keyhole::after {
+    content: '';
+    position: absolute;
+    top: 55%; left: 50%;
+    transform: translateX(-50%);
+    width: 5px; height: 6px;
+    background: #080610;
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  }
+
+  /* Light rays from opening door */
+  .door-light {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 60%, #c9a84c18 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 1.5s ease 1s;
+    pointer-events: none;
+  }
+  .door-light.visible { opacity: 1; }
+
+  /* Door gap glow */
+  .door-gap {
+    position: absolute;
+    top: 5%; bottom: 0;
+    left: 50%; width: 2px;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, #c9a84c44, #c9a84c11, transparent);
+    opacity: 0;
+    transition: opacity 0.4s ease 0.6s;
+    pointer-events: none;
+  }
+  .door-gap.visible { opacity: 1; }
+
+  /* Prompt text */
+  .door-prompt {
+    position: absolute;
+    bottom: -48px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    white-space: nowrap;
+    text-transform: uppercase;
+    animation: breathe 2.4s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%,100% { opacity: 0.5; }
+    50%      { opacity: 1; }
+  }
+
+  /* Dust particles */
+  .particle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: var(--gold);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    animation: drift 4s ease-in-out infinite;
+  }
+  @keyframes drift {
+    0%   { opacity: 0; transform: translateY(0) translateX(0); }
+    20%  { opacity: 0.6; }
+    80%  { opacity: 0.2; }
+    100% { opacity: 0; transform: translateY(-80px) translateX(var(--dx, 20px)); }
+  }
+
+  /* Fade out overlay for intro → title transition */
+  #fade-overlay {
+    position: fixed;
+    inset: 0;
+    background: #0d0c10;
+    z-index: 300;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+  }
+  #fade-overlay.dark { opacity: 1; pointer-events: all; }
+
+  /* ══════════════════════════════════
+     TITLE SCREEN
+  ══════════════════════════════════ */
+  #title-screen {
+    justify-content: center;
+    padding: 2.5rem 1.5rem;
+    background: radial-gradient(ellipse at 50% 60%, #1e1628 0%, #0d0c10 70%);
+    text-align: center;
+    gap: 0;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+  #title-screen.visible { opacity: 1; }
+
+  .title-ornament {
+    width: min(280px, 80vw); height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 1.2rem auto;
+    transform: scaleX(0);
+    transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.3s;
+  }
+  #title-screen.visible .title-ornament { transform: scaleX(1); }
+
+  h1.game-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.6rem, 7vw, 3rem);
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    color: var(--gold);
+    text-shadow: 0 0 40px var(--glow);
+    line-height: 1.3;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.9s ease 0.5s, transform 0.9s ease 0.5s;
+  }
+  #title-screen.visible h1.game-title { opacity: 1; transform: translateY(0); }
+
+  .game-subtitle {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-top: 0.3rem;
+    opacity: 0;
+    transition: opacity 0.9s ease 0.8s;
+  }
+  #title-screen.visible .game-subtitle { opacity: 1; }
+
+  .intro-text {
+    max-width: 480px;
+    color: var(--ivory);
+    font-weight: 300;
+    font-size: 1rem;
+    opacity: 0;
+    margin: 1.6rem 0 2rem;
+    transition: opacity 0.9s ease 1s;
+  }
+  #title-screen.visible .intro-text { opacity: 0.85; }
+
+  .enter-btn-wrap {
+    opacity: 0;
+    transition: opacity 0.9s ease 1.3s;
+  }
+  #title-screen.visible .enter-btn-wrap { opacity: 1; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    color: var(--gold);
+    background: transparent;
+    border: 1px solid var(--gold-dim);
+    padding: 0.8rem 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active, .btn:hover {
+    border-color: var(--gold);
+    box-shadow: 0 0 18px var(--glow);
+    background: #c9a84c0a;
+  }
+
+  /* ══════════════════════════════════
+     GAME SCREEN
+  ══════════════════════════════════ */
+  #game-screen {
+    background: var(--ink);
+    justify-content: flex-start;
+    padding: 0;
+    gap: 0;
+  }
+
+  .scene-view {
+    width: 100%;
+    position: relative;
+    height: min(55vw, 320px);
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .scene-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 40%, #1e1520 0%, transparent 55%),
+      radial-gradient(ellipse at 70% 70%, #12101e 0%, transparent 50%),
+      linear-gradient(180deg, #0f0d14 0%, #141018 60%, #0d0b11 100%);
+  }
+
+  /* Animated vignette shimmer */
+  .scene-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, #c9a84c08 0%, transparent 60%);
+    animation: shimmer 6s ease-in-out infinite alternate;
+  }
+  @keyframes shimmer {
+    0%   { opacity: 0.4; }
+    100% { opacity: 1; }
+  }
+
+  .room-art { position: absolute; inset: 0; pointer-events: none; }
+
+  .float-symbol {
+    position: absolute;
+    font-size: 1.2rem;
+    color: var(--gold-dim);
+    opacity: 0.18;
+    animation: floatsym 8s ease-in-out infinite;
+    user-select: none;
+  }
+  @keyframes floatsym {
+    0%,100% { transform: translateY(0) rotate(-4deg); }
+    50%      { transform: translateY(-10px) rotate(4deg); }
+  }
+
+  .organ-art {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 2px; align-items: flex-end;
+    pointer-events: none;
+  }
+  .pipe {
+    background: linear-gradient(180deg, #2a2235 0%, #18141f 100%);
+    border: 1px solid #2e2640;
+    border-bottom: none;
+    border-radius: 2px 2px 0 0;
+  }
+
+  /* Animated pipe resonance */
+  .pipe.active-pipe {
+    background: linear-gradient(180deg, #3a3050 0%, #2a2040 100%);
+    box-shadow: 0 0 8px #c9a84c44;
+    transition: all 0.15s ease;
+  }
+
+  .candle { position: absolute; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+  .candle-flame {
+    width: 7px; height: 12px;
+    background: radial-gradient(ellipse at 50% 80%, #e8832a, #c9a84c 40%, #fff8e0 100%);
+    border-radius: 50% 50% 20% 20%;
+    animation: flicker 1.8s ease-in-out infinite alternate;
+    filter: blur(0.4px);
+    box-shadow: 0 0 8px #e8832a88, 0 0 16px #c9a84c44;
+  }
+  @keyframes flicker {
+    0%   { transform: scaleX(1) scaleY(1); opacity: 0.95; }
+    50%  { transform: scaleX(0.88) scaleY(1.06) translateX(1px); }
+    100% { transform: scaleX(0.94) scaleY(1.04); opacity: 1; }
+  }
+  .candle-body { width: 9px; height: 32px; background: linear-gradient(180deg, #d4c9a8, #a89870); border-radius: 1px; }
+  .candle-base { width: 13px; height: 3px; background: #8a7850; border-radius: 1px; }
+
+  /* Candle glow on wall */
+  .candle-glow {
+    position: absolute;
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #e8832a18 0%, transparent 70%);
+    top: -30px; left: -26px;
+    pointer-events: none;
+    animation: glow-pulse 2.2s ease-in-out infinite alternate;
+  }
+  @keyframes glow-pulse {
+    0%   { transform: scale(0.9); opacity: 0.7; }
+    100% { transform: scale(1.1); opacity: 1; }
+  }
+
+  .hotspot {
+    position: absolute;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .hotspot-inner {
+    border: 1px solid var(--gold-dim);
+    border-radius: 2px;
+    transition: box-shadow 0.2s;
+  }
+  .hotspot:active .hotspot-inner,
+  .hotspot:hover  .hotspot-inner { box-shadow: 0 0 20px var(--gold); }
+
+  .hotspot-label {
+    position: absolute;
+    bottom: calc(100% + 5px);
+    left: 50%; transform: translateX(-50%);
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    white-space: nowrap;
+    background: #0d0c10cc;
+    padding: 2px 6px;
+    text-transform: uppercase;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .hotspot:hover .hotspot-label { opacity: 1; }
+
+  @keyframes pulse-gold {
+    0%,100% { box-shadow: 0 0 0 0 var(--glow); }
+    50%      { box-shadow: 0 0 14px 4px var(--glow); }
+  }
+  .pulse .hotspot-inner { animation: pulse-gold 2.4s ease-in-out infinite; }
+
+  #hs-cipher  { left:50%; top:50%; transform:translate(-50%,-50%); width:min(46%,160px); height:min(36%,110px); }
+  #hs-score   { left:10%; top:42%; transform:translateY(-50%);     width:min(14%,56px);  height:min(30%,90px); }
+  #hs-box     { right:8%; top:46%; transform:translateY(-50%);     width:min(14%,56px);  height:min(20%,60px); }
+
+  /* Scene-enter animation */
+  #game-screen .scene-view {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  #game-screen.scene-ready .scene-view { opacity: 1; transform: translateY(0); }
+
+  /* ── NARRATIVE PANEL ── */
+  .narrative-panel {
+    width: 100%;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    flex: 1;
+  }
+
+  .panel-header {
+    padding: 0.8rem 1.2rem 0.7rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem;
+  }
+  .panel-header h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .scene-name {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+
+  .narrative-box {
+    padding: 1rem 1.2rem;
+    font-weight: 300;
+    font-size: 0.92rem;
+    line-height: 1.75;
+    color: #c8bfda;
+  }
+  .narrative-box p + p { margin-top: 0.8rem; }
+
+  /* Typewriter text effect */
+  .typewriter-text {
+    overflow: hidden;
+    border-right: 1px solid var(--gold-dim);
+    animation: typing-cursor 0.8s step-end infinite;
+  }
+  .typewriter-text.done { border-right: none; animation: none; }
+  @keyframes typing-cursor { 0%,100%{border-color:var(--gold-dim)} 50%{border-color:transparent} }
+
+  .panel-actions {
+    padding: 0.8rem 1.2rem 1.2rem;
+    border-top: 1px solid var(--border);
+    display: flex; flex-wrap: wrap; gap: 0.6rem;
+  }
+
+  /* ══════════════════════════════════
+     PUZZLE MODAL
+  ══════════════════════════════════ */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: #0d0c10f0;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100;
+    overflow-y: auto;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    width: 100%;
+    max-width: 600px;
+    padding: 1.4rem 1.2rem 2rem;
+    position: relative;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -8px 40px #00000088, 0 0 20px var(--glow);
+    max-height: 92dvh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 1.2rem;
+  }
+  .modal-close {
+    position: absolute; top: 0.8rem; right: 1rem;
+    background: none; border: none;
+    color: var(--muted); font-size: 1.2rem;
+    cursor: pointer; padding: 0.4rem;
+    touch-action: manipulation;
+  }
+  .modal-close:active { color: var(--ivory); }
+  .modal h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    margin-bottom: 0.4rem;
+  }
+  .modal-desc {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--muted);
+    font-size: 0.88rem;
+    margin-bottom: 1.2rem;
+    line-height: 1.6;
+  }
+
+  .staff-container {
+    background: #12101a;
+    border: 1px solid var(--border);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+  }
+  .staff-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+  .note-display { display: flex; gap: 6px; flex-wrap: wrap; }
+  .note-chip {
+    background: #1c1828;
+    border: 1px solid var(--border);
+    color: var(--ivory);
+    font-family: 'Cinzel', serif;
+    font-size: 0.82rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 2px;
+    min-width: 42px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .note-chip.lit { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 8px var(--glow); }
+  .note-chip.playing {
+    background: var(--gold);
+    color: var(--ink);
+    transform: scale(1.08);
+    box-shadow: 0 0 16px var(--glow);
+  }
+
+  .answer-row {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    margin-bottom: 1rem;
+    min-height: 42px;
+    background: #12101a;
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.8rem;
+    align-items: center;
+    border-radius: 4px;
+  }
+  .answer-chip {
+    background: #2a2040;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    border-radius: 2px;
+    touch-action: manipulation;
+    animation: chip-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes chip-pop { 0%{transform:scale(0.6);opacity:0} 100%{transform:scale(1);opacity:1} }
+
+  /* ── PIANO ── */
+  .piano-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin: 0.8rem 0;
+    touch-action: manipulation;
+    user-select: none;
+  }
+  .piano-inner { position: relative; display: flex; gap: 3px; }
+
+  .key {
+    font-family: 'Cinzel', serif;
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 8px;
+    user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    border-radius: 0 0 4px 4px;
+    transition: transform 0.08s ease;
+  }
+  .key.white {
+    width: 44px; height: 120px;
+    background: linear-gradient(180deg, #e8e0cc, #cfc8b0);
+    color: #2a2235;
+    border: 1px solid #9a9080;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+  }
+  .key.black {
+    width: 30px; height: 74px;
+    background: linear-gradient(180deg, #2a2235, #1a1522);
+    color: var(--gold-dim);
+    border: 1px solid #3a3050;
+    font-size: 0.55rem;
+    position: absolute;
+    z-index: 2;
+  }
+  .key.white:active, .key.white.pressed {
+    background: linear-gradient(180deg, #fff8e0, #e8d8a0);
+    box-shadow: 0 0 10px var(--glow);
+    transform: translateY(2px);
+  }
+  .key.black:active, .key.black.pressed {
+    background: linear-gradient(180deg, #3a3050, #2a2040);
+    box-shadow: 0 0 8px var(--amber);
+    transform: translateY(2px);
+  }
+
+  .feedback-msg {
+    text-align: center;
+    font-style: italic;
+    font-size: 0.9rem;
+    min-height: 1.4rem;
+    margin: 0.6rem 0;
+    transition: color 0.3s;
+  }
+  .feedback-msg.correct { color: #7ecb7e; }
+  .feedback-msg.wrong   { color: #cb7e7e; }
+
+  /* Seal break animation */
+  .seal-break {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 150;
+    opacity: 0;
+  }
+  .seal-break.active {
+    animation: seal-flash 1.8s ease forwards;
+  }
+  @keyframes seal-flash {
+    0%   { opacity: 0; background: transparent; }
+    15%  { opacity: 1; background: radial-gradient(ellipse at 50% 50%, #c9a84c22 0%, transparent 70%); }
+    40%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .puzzle-controls { display: flex; gap: 0.6rem; justify-content: flex-end; flex-wrap: wrap; }
+
+  /* ══════════════════════════════════
+     COMPOSER SCREEN
+  ══════════════════════════════════ */
+  #composer-screen {
+    background: var(--deep);
+    justify-content: flex-start;
+    padding: 2rem 1.2rem;
+    gap: 1.2rem;
+    align-items: center;
+  }
+
+  .composer-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    letter-spacing: 0.14em;
+    color: var(--gold);
+    text-align: center;
+  }
+
+  .sequencer-scroll { width: 100%; overflow-x: auto; padding-bottom: 0.5rem; }
+  .sequencer {
+    display: grid;
+    grid-template-columns: 44px repeat(8, 1fr);
+    gap: 3px;
+    min-width: 340px;
+    width: 100%;
+  }
+  .seq-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 6px;
+    letter-spacing: 0.08em;
+  }
+  .seq-cell {
+    height: 38px;
+    background: #1a1825;
+    border: 1px solid #2a2440;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.12s, transform 0.1s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .seq-cell.on { background: var(--gold); border-color: var(--amber); box-shadow: 0 0 5px var(--glow); }
+  .seq-cell.on:active { transform: scale(0.92); }
+  .seq-cell.playing { outline: 2px solid var(--amber); outline-offset: -2px; }
+  .seq-cell.trigger-play { animation: cell-trigger 0.15s ease; }
+  @keyframes cell-trigger { 0%{transform:scale(1)} 50%{transform:scale(0.88)} 100%{transform:scale(1)} }
+
+  .composer-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  .tempo-row { display: flex; align-items: center; gap: 0.6rem; color: var(--muted); font-size: 0.85rem; }
+  .tempo-row input[type=range] { accent-color: var(--gold); width: 100px; }
+
+  /* ── STATUS TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1c1820;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    padding: 0.6rem 1.4rem;
+    border-radius: 2px;
+    white-space: nowrap;
+    z-index: 500;
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ── Fade overlay ── -->
+<div id="fade-overlay"></div>
+
+<!-- ── Status toast ── -->
+<div id="toast"></div>
+
+<!-- ── Seal flash ── -->
+<div class="seal-break" id="seal-break"></div>
+
+<!-- ══════════════ INTRO / DOOR SCREEN ══════════════ -->
+<div id="intro-screen">
+  <div class="door-scene" id="door-scene" onclick="beginOpenDoor()">
+    <div class="arch-frame">
+      <div class="arch-glow"></div>
+      <div class="door-light" id="door-light"></div>
+      <div class="door-gap" id="door-gap"></div>
+    </div>
+    <div class="arch-stones"></div>
+
+    <!-- Left door -->
+    <div class="door-left" id="door-left">
+      <div class="door-grain"></div>
+      <div class="door-panel-inner top"></div>
+      <div class="door-panel-inner bottom"></div>
+      <span class="door-carving" style="top:22%;left:50%;transform:translateX(-50%)">♩</span>
+      <span class="door-carving" style="bottom:18%;left:50%;transform:translateX(-50%)">𝄞</span>
+      <div class="door-handle"></div>
+      <div class="keyhole"></div>
+    </div>
+
+    <!-- Right door -->
+    <div class="door-right" id="door-right">
+      <div class="door-grain"></div>
+      <div class="door-panel-inner top"></div>
+      <div class="door-panel-inner bottom"></div>
+      <span class="door-carving" style="top:22%;left:50%;transform:translateX(-50%)">♬</span>
+      <span class="door-carving" style="bottom:18%;left:50%;transform:translateX(-50%)">♪</span>
+      <div class="door-handle"></div>
+    </div>
+
+    <!-- Dust particles (added via JS) -->
+    <div id="particles"></div>
+
+    <p class="door-prompt">Touch to enter</p>
+  </div>
+</div>
+
+<!-- ══════════════ TITLE SCREEN ══════════════ -->
+<div id="title-screen" class="screen">
+  <div class="title-ornament"></div>
+  <h1 class="game-title">The Resonance<br>Archives</h1>
+  <div class="title-ornament"></div>
+  <p class="game-subtitle">A Journey Through Sound and Mystery</p>
+  <p class="intro-text">
+    You have been led here by a fragment of melody no one else could hear.
+    Somewhere within these Archives lies the lost Grand Composition —
+    sealed behind puzzles only those who truly understand music can unlock.
+  </p>
+  <div class="enter-btn-wrap">
+    <button class="btn" onclick="startGame()">Enter the Archives</button>
+  </div>
+</div>
+
+<!-- ══════════════ GAME SCREEN ══════════════ -->
+<div id="game-screen" class="screen">
+
+  <div class="scene-view">
+    <div class="scene-bg"></div>
+    <div class="room-art">
+      <span class="float-symbol" style="top:12%;left:8%;animation-delay:0s">♩</span>
+      <span class="float-symbol" style="top:20%;left:78%;animation-delay:1.2s">♬</span>
+      <span class="float-symbol" style="top:60%;left:16%;animation-delay:2.4s">𝄞</span>
+      <span class="float-symbol" style="top:55%;left:86%;animation-delay:0.8s">♪</span>
+      <div class="organ-art" id="organ-art"></div>
+      <div class="candle" style="bottom:10%;left:10%;">
+        <div class="candle-glow"></div>
+        <div class="candle-flame"></div><div class="candle-body"></div><div class="candle-base"></div>
+      </div>
+      <div class="candle" style="bottom:10%;right:10%;">
+        <div class="candle-glow"></div>
+        <div class="candle-flame" style="animation-delay:0.7s"></div><div class="candle-body"></div><div class="candle-base"></div>
+      </div>
+    </div>
+
+    <div class="hotspot pulse" id="hs-cipher" onclick="openPuzzle()">
+      <div class="hotspot-inner" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:linear-gradient(145deg,#1a1522,#110f1a);">
+        <span style="font-size:1.6rem;color:var(--gold-dim);opacity:0.75">𝄞</span>
+        <span style="font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase">Cipher Panel</span>
+      </div>
+      <span class="hotspot-label">Examine the Cipher Panel</span>
+    </div>
+    <div class="hotspot" id="hs-score" onclick="showNote('score')">
+      <div class="hotspot-inner" style="width:100%;height:100%;background:#14121c;display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:1.4rem;color:var(--gold-dim);opacity:0.5">📜</span>
+      </div>
+      <span class="hotspot-label">Ancient Score</span>
+    </div>
+    <div class="hotspot" id="hs-box" onclick="showNote('box')">
+      <div class="hotspot-inner" style="width:100%;height:100%;background:#14121c;display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:1.3rem;color:var(--gold-dim);opacity:0.5">🎵</span>
+      </div>
+      <span class="hotspot-label">Music Box</span>
+    </div>
+  </div>
+
+  <div class="narrative-panel">
+    <div class="panel-header">
+      <h2>Archive Log</h2>
+      <span class="scene-name">The Antechamber of Echoes</span>
+    </div>
+    <div class="narrative-box" id="narrative-box">
+      <p id="intro-para-1"></p>
+      <p id="intro-para-2"></p>
+      <p id="intro-para-3"></p>
+      <p id="intro-para-4"></p>
+    </div>
+    <div class="panel-actions">
+      <button class="btn" style="font-size:0.65rem;" onclick="playGivenSequence()">▶ Play the Sequence</button>
+      <button class="btn" style="font-size:0.65rem;" onclick="openPuzzle()">🔑 Open Cipher Panel</button>
+    </div>
+  </div>
+
+  <!-- Puzzle Modal -->
+  <div class="modal-overlay" id="puzzle-modal" onclick="handleOverlayClick(event)">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <button class="modal-close" onclick="closePuzzle()">✕</button>
+      <h3>The Cipher Panel</h3>
+      <p class="modal-desc">
+        The panel is engraved with a sequence of notes. Identify the pattern and choose the next two notes to unseal the chamber.
+      </p>
+      <div class="staff-container">
+        <div class="staff-label">The Given Sequence</div>
+        <div class="note-display" id="given-notes"></div>
+      </div>
+      <div class="staff-label" style="margin-bottom:4px;">Your Answer — tap two notes below</div>
+      <div class="answer-row" id="answer-row">
+        <span style="color:var(--muted);font-size:0.8rem;font-style:italic;" id="answer-placeholder">Tap keys below…</span>
+      </div>
+      <div class="piano-wrapper">
+        <div class="piano-inner" id="piano-keys"></div>
+      </div>
+      <div class="feedback-msg" id="feedback"></div>
+      <div class="puzzle-controls">
+        <button class="btn" style="font-size:0.65rem;" onclick="clearAnswer()">Clear</button>
+        <button class="btn" style="font-size:0.65rem;" onclick="checkAnswer()">Confirm Answer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ COMPOSER SCREEN ══════════════ -->
+<div id="composer-screen" class="screen">
+  <p class="composer-title">The Antechamber Unsealed</p>
+  <p style="font-style:italic;color:var(--muted);text-align:center;font-size:0.9rem;max-width:420px;">
+    You have proven your ear. The first instrument stirs to life.
+    Compose a phrase — it will echo through the Archives as you journey deeper.
+  </p>
+  <div class="sequencer-scroll">
+    <div class="sequencer" id="sequencer"></div>
+  </div>
+  <div class="composer-controls">
+    <div class="tempo-row">
+      <span>Tempo</span>
+      <input type="range" id="tempo-slider" min="60" max="200" value="100" oninput="updateTempo(this.value)">
+      <span id="tempo-val">100</span>
+    </div>
+    <button class="btn" style="font-size:0.65rem;" id="play-btn" onclick="toggleComposer()">▶ Play</button>
+    <button class="btn" style="font-size:0.65rem;" onclick="clearSequencer()">Clear</button>
+  </div>
+  <p style="color:var(--muted);font-size:0.82rem;text-align:center;font-style:italic;max-width:340px;">
+    Tap cells to toggle notes. Each column is a beat; each row a pitch.
+  </p>
+  <button class="btn" style="font-size:0.65rem;margin-top:0.5rem;" onclick="nextLevel()">Continue to Level II →</button>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   AUDIO ENGINE
+══════════════════════════════════ */
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+const NOTE_FREQS = {
+  'C4':261.63,'D4':293.66,'E4':329.63,'F4':349.23,
+  'G4':392.00,'A4':440.00,'B4':493.88,'C5':523.25,
+  'C#4':277.18,'D#4':311.13,'F#4':369.99,'G#4':415.30,'A#4':466.16
+};
+
+function playNote(noteName, duration=0.4, when=0, type='triangle', gainMul=1) {
+  const ctx = getAudio();
+  const freq = NOTE_FREQS[noteName];
+  if (!freq) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const t = ctx.currentTime + when;
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t);
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(0.28 * gainMul, t + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(t); osc.stop(t + duration + 0.05);
+}
+
+/* ── Creak sound (door) ── */
+function playCreak(intensity=1) {
+  const ctx = getAudio();
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 1.8, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  let phase = 0;
+  const baseFreq = 80 + Math.random() * 60;
+  for (let i = 0; i < data.length; i++) {
+    const t = i / ctx.sampleRate;
+    const envelope = Math.sin(Math.PI * (t / 1.8)) * Math.exp(-t * 1.2);
+    const creak = Math.sin(2 * Math.PI * (baseFreq + 120 * t) * t)
+                + 0.4 * Math.sin(2 * Math.PI * (baseFreq * 2.3 - 80 * t) * t)
+                + 0.2 * (Math.random() * 2 - 1);
+    data[i] = creak * envelope * 0.18 * intensity;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const gain = ctx.createGain();
+  gain.gain.value = 1;
+  src.connect(gain); gain.connect(ctx.destination);
+  src.start();
+}
+
+/* ── Low resonant boom (door opens) ── */
+function playDoorBoom() {
+  const ctx = getAudio();
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 1.4, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const t = i / ctx.sampleRate;
+    const env = Math.exp(-t * 3.5);
+    data[i] = (Math.sin(2 * Math.PI * 55 * t) + 0.5 * Math.sin(2 * Math.PI * 110 * t) + 0.2 * (Math.random()*2-1)) * env * 0.22;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const g = ctx.createGain(); g.gain.value = 1;
+  src.connect(g); g.connect(ctx.destination); src.start();
+}
+
+/* ── Mystical whoosh (transition) ── */
+function playWhoosh() {
+  const ctx = getAudio();
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 1.2, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const t = i / ctx.sampleRate;
+    const env = (1 - t/1.2) * Math.sin(Math.PI * t / 1.2);
+    data[i] = (Math.random() * 2 - 1) * env * 0.15;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(800, ctx.currentTime);
+  filter.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 1.2);
+  filter.Q.value = 0.8;
+  const g = ctx.createGain(); g.gain.value = 1;
+  src.connect(filter); filter.connect(g); g.connect(ctx.destination); src.start();
+}
+
+/* ── Seal break / unlock sound ── */
+function playSealBreak() {
+  const ctx = getAudio();
+  ['C4','E4','G4','C5'].forEach((note, i) => {
+    playNote(note, 0.8, i * 0.12, 'sine', 0.7);
+    playNote(note, 1.2, i * 0.12, 'triangle', 0.4);
+  });
+  setTimeout(() => {
+    playNote('C5', 2.0, 0, 'sine', 0.9);
+    playNote('G4', 2.0, 0.05, 'sine', 0.5);
+  }, 600);
+}
+
+/* ── Parchment rustle ── */
+function playRustle() {
+  const ctx = getAudio();
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / ctx.sampleRate;
+    d[i] = (Math.random()*2-1) * Math.sin(Math.PI * t/0.5) * 0.06;
+  }
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const filt = ctx.createBiquadFilter(); filt.type = 'highpass'; filt.frequency.value = 2000;
+  const g = ctx.createGain(); g.gain.value = 1;
+  src.connect(filt); filt.connect(g); g.connect(ctx.destination); src.start();
+}
+
+/* ── Wrong answer buzz ── */
+function playBuzz() {
+  const ctx = getAudio();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.value = 120;
+  gain.gain.setValueAtTime(0.12, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(); osc.stop(ctx.currentTime + 0.4);
+}
+
+/* ── Key click (UI button) ── */
+function playClick() {
+  const ctx = getAudio();
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine'; osc.frequency.value = 900;
+  g.gain.setValueAtTime(0.06, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+  osc.connect(g); g.connect(ctx.destination);
+  osc.start(); osc.stop(ctx.currentTime + 0.07);
+}
+
+/* ── Ambient drone ── */
+let droneNode = null;
+function startAmbient() {
+  if (droneNode) return;
+  const ctx = getAudio();
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc1.type = 'sine'; osc1.frequency.value = 55;
+  osc2.type = 'sine'; osc2.frequency.value = 55.4;
+  gain.gain.setValueAtTime(0, ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(0.07, ctx.currentTime + 3);
+  osc1.connect(gain); osc2.connect(gain); gain.connect(ctx.destination);
+  osc1.start(); osc2.start();
+  droneNode = { osc1, osc2, gain };
+}
+function stopAmbient() {
+  if (!droneNode) return;
+  const ctx = getAudio();
+  droneNode.gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.5);
+  setTimeout(() => { droneNode.osc1.stop(); droneNode.osc2.stop(); droneNode = null; }, 1600);
+}
+
+/* ══════════════════════════════════
+   INTRO DOOR ANIMATION
+══════════════════════════════════ */
+let doorOpened = false;
+
+/* Spawn dust particles */
+function spawnParticles() {
+  const cont = document.getElementById('particles');
+  cont.innerHTML = '';
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = (20 + Math.random() * 60) + '%';
+    p.style.top  = (30 + Math.random() * 50) + '%';
+    p.style.setProperty('--dx', (Math.random() * 60 - 30) + 'px');
+    p.style.animationDelay = (Math.random() * 2.5) + 's';
+    p.style.animationDuration = (3 + Math.random() * 2) + 's';
+    cont.appendChild(p);
+  }
+}
+
+function beginOpenDoor() {
+  if (doorOpened) return;
+  doorOpened = true;
+  getAudio(); // unlock audio context on user gesture
+
+  playCreak(1.2);
+  spawnParticles();
+
+  setTimeout(() => {
+    document.getElementById('door-gap').classList.add('visible');
+    playCreak(0.7);
+  }, 300);
+
+  setTimeout(() => {
+    document.getElementById('door-left').classList.add('open');
+    document.getElementById('door-right').classList.add('open');
+    document.getElementById('door-light').classList.add('visible');
+    playDoorBoom();
+    startAmbient();
+  }, 500);
+
+  // Fade to title after doors swing
+  setTimeout(() => {
+    playWhoosh();
+    const overlay = document.getElementById('fade-overlay');
+    overlay.classList.add('dark');
+  }, 2400);
+
+  setTimeout(() => {
+    document.getElementById('intro-screen').classList.add('hidden');
+    const titleScreen = document.getElementById('title-screen');
+    titleScreen.classList.add('active');
+    requestAnimationFrame(() => requestAnimationFrame(() => titleScreen.classList.add('visible')));
+    const overlay = document.getElementById('fade-overlay');
+    overlay.style.transition = 'opacity 1s ease';
+    overlay.classList.remove('dark');
+    setTimeout(() => { overlay.style.transition = ''; }, 100);
+  }, 3000);
+}
+
+/* ══════════════════════════════════
+   PUZZLE DATA
+══════════════════════════════════ */
+const GIVEN  = ['C4','D4','E4','G4'];
+const ANSWER = ['A4','C5'];
+let playerAnswer = [];
+
+/* ══════════════════════════════════
+   SCREENS
+══════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','visible'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if (id === 'title-screen') {
+    requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById('title-screen').classList.add('visible')));
+  }
+}
+
+function startGame() {
+  playClick();
+  playWhoosh();
+  showScreen('game-screen');
+  buildOrgan();
+  buildGivenNotes();
+  buildPiano();
+  // Animate scene in after short delay
+  setTimeout(() => {
+    document.getElementById('game-screen').classList.add('scene-ready');
+    typewriteNarrative();
+  }, 100);
+  stopAmbient();
+  setTimeout(startAmbient, 800);
+}
+
+/* ══════════════════════════════════
+   TYPEWRITER NARRATIVE
+══════════════════════════════════ */
+const NARRATIVE_LINES = [
+  'The air carries a faint vibration, as though the walls remember music played here centuries ago.',
+  'A great cipher panel dominates the far wall — ornate brass, engraved with a sequence of notes that glows in the candlelight.',
+  'Scattered around are fragments of an ancient score and a dusty music box. Perhaps they hold clues.',
+  'Examine what you can. The panel awaits your answer.'
+];
+
+function typewriteNarrative() {
+  const ids = ['intro-para-1','intro-para-2','intro-para-3','intro-para-4'];
+  let lineIdx = 0;
+  function typeLine(paraEl, text, cb) {
+    paraEl.classList.add('typewriter-text');
+    let i = 0;
+    const interval = setInterval(() => {
+      paraEl.textContent = text.slice(0, ++i);
+      if (i >= text.length) {
+        clearInterval(interval);
+        paraEl.classList.remove('typewriter-text');
+        paraEl.classList.add('done');
+        if (cb) cb();
+      }
+    }, 22);
+  }
+  function nextLine() {
+    if (lineIdx >= ids.length) return;
+    const el = document.getElementById(ids[lineIdx]);
+    const text = NARRATIVE_LINES[lineIdx];
+    const isLast = lineIdx === ids.length - 1;
+    if (isLast) el.style.fontStyle = 'italic';
+    typeLine(el, text, () => {
+      lineIdx++;
+      setTimeout(nextLine, 300);
+    });
+  }
+  nextLine();
+}
+
+/* ══════════════════════════════════
+   ORGAN
+══════════════════════════════════ */
+function buildOrgan() {
+  const heights = [100,130,160,180,160,130,100,85,70,60,70,85];
+  const widths  = [14,17,20,22,20,17,14,12,10,9,10,12];
+  const el = document.getElementById('organ-art');
+  heights.forEach((h,i) => {
+    const p = document.createElement('div');
+    p.className = 'pipe';
+    p.style.width = widths[i]+'px';
+    p.style.height = h+'px';
+    p.style.transition = 'box-shadow 0.3s ease';
+    el.appendChild(p);
+  });
+}
+
+function activatePipe(idx) {
+  const pipes = document.getElementById('organ-art').children;
+  if (pipes[idx]) {
+    pipes[idx].classList.add('active-pipe');
+    setTimeout(() => pipes[idx].classList.remove('active-pipe'), 500);
+  }
+}
+
+/* ══════════════════════════════════
+   PUZZLE
+══════════════════════════════════ */
+function buildGivenNotes() {
+  const el = document.getElementById('given-notes');
+  el.innerHTML = '';
+  GIVEN.forEach(n => {
+    const c = document.createElement('div');
+    c.className = 'note-chip lit';
+    c.textContent = n.replace(/[45]/g,'');
+    el.appendChild(c);
+  });
+  ['—','—'].forEach(() => {
+    const c = document.createElement('div');
+    c.className = 'note-chip';
+    c.textContent = '—';
+    el.appendChild(c);
+  });
+}
+
+function buildPiano() {
+  const whites = ['C4','D4','E4','F4','G4','A4','B4','C5'];
+  const blackMap = { 0:'C#4', 1:'D#4', 3:'F#4', 4:'G#4', 5:'A#4' };
+  const keyW = 44, gap = 3;
+  const inner = document.getElementById('piano-keys');
+  inner.innerHTML = '';
+  inner.style.position = 'relative';
+  inner.style.height = '120px';
+  const totalW = whites.length * keyW + (whites.length-1) * gap;
+  inner.style.width = totalW + 'px';
+
+  whites.forEach((note, i) => {
+    const key = document.createElement('button');
+    key.className = 'key white';
+    key.textContent = note.replace(/[45]/g,'');
+    key.style.position = 'absolute';
+    key.style.left = (i*(keyW+gap)) + 'px';
+    key.style.top = '0';
+    key.dataset.note = note;
+    key.addEventListener('pointerdown', () => pressKey(note, key));
+    inner.appendChild(key);
+  });
+
+  Object.entries(blackMap).forEach(([wi, note]) => {
+    const i = parseInt(wi);
+    const key = document.createElement('button');
+    key.className = 'key black';
+    key.textContent = note.replace('4','').replace('#','♯');
+    const leftBase = i*(keyW+gap) + keyW - 15;
+    key.style.position = 'absolute';
+    key.style.left = leftBase + 'px';
+    key.style.top = '0';
+    key.dataset.note = note;
+    key.addEventListener('pointerdown', e => { e.stopPropagation(); pressKey(note, key); });
+    inner.appendChild(key);
+  });
+}
+
+function pressKey(note, el) {
+  if (playerAnswer.length >= 2) return;
+  playNote(note, 0.5, 0, 'triangle', 1);
+  el.classList.add('pressed');
+  setTimeout(() => el.classList.remove('pressed'), 180);
+  playerAnswer.push(note);
+  renderAnswer();
+}
+
+function renderAnswer() {
+  const row = document.getElementById('answer-row');
+  const ph  = document.getElementById('answer-placeholder');
+  if (ph) ph.style.display = playerAnswer.length ? 'none' : '';
+  row.querySelectorAll('.answer-chip').forEach(c => c.remove());
+  playerAnswer.forEach((n,i) => {
+    const chip = document.createElement('div');
+    chip.className = 'answer-chip';
+    chip.textContent = n.replace('4','').replace('5','ˈ');
+    chip.title = 'Tap to remove';
+    chip.onclick = () => { playClick(); playerAnswer.splice(i,1); renderAnswer(); setFeedback('',''); };
+    row.appendChild(chip);
+  });
+}
+
+function clearAnswer() { playClick(); playerAnswer = []; renderAnswer(); setFeedback('',''); }
+
+function checkAnswer() {
+  if (playerAnswer.length < 2) { setFeedback('Select two notes first.','wrong'); playBuzz(); return; }
+  if (playerAnswer[0]===ANSWER[0] && playerAnswer[1]===ANSWER[1]) {
+    setFeedback('The panel shudders… the seal breaks. The chamber opens.','correct');
+    playSealBreak();
+    document.getElementById('seal-break').classList.add('active');
+    setTimeout(() => document.getElementById('seal-break').classList.remove('active'), 2000);
+    setTimeout(() => { closePuzzle(); unlockComposer(); }, 1800);
+  } else {
+    playBuzz();
+    setFeedback('The engraving flickers — that is not the right continuation.','wrong');
+    setTimeout(() => setFeedback('',''), 2200);
+  }
+}
+
+function setFeedback(msg, cls) {
+  const el = document.getElementById('feedback');
+  el.textContent = msg;
+  el.className = 'feedback-msg ' + cls;
+}
+
+function openPuzzle() {
+  playClick();
+  buildGivenNotes();
+  document.getElementById('puzzle-modal').classList.add('open');
+}
+function closePuzzle() {
+  playClick();
+  document.getElementById('puzzle-modal').classList.remove('open');
+}
+function handleOverlayClick(e) { if (e.target === e.currentTarget) closePuzzle(); }
+
+function playGivenSequence() {
+  playClick();
+  const chips = document.querySelectorAll('#given-notes .note-chip.lit');
+  const pipeIndexMap = {'C4':0,'D4':2,'E4':4,'G4':7,'A4':9,'C5':11};
+  GIVEN.forEach((n,i) => {
+    playNote(n, 0.5, i*0.55);
+    setTimeout(() => {
+      chips[i]?.classList.add('playing');
+      const pIdx = pipeIndexMap[n] ?? i;
+      activatePipe(pIdx);
+      setTimeout(() => chips[i]?.classList.remove('playing'), 500);
+    }, i * 550);
+  });
+}
+
+function showNote(which) {
+  playRustle();
+  const texts = {
+    score: '<strong style="color:var(--gold-dim)">The Ancient Score</strong><br><br>"The pentatonic ladder climbs five rungs — Do, Re, Mi, Sol, La — then rests upon the octave."',
+    box:   '<strong style="color:var(--gold-dim)">The Music Box</strong><br><br>"C begins the journey. Whole steps carry you upward — then a skip past the troubled tone to reach the fifth and sixth."'
+  };
+  const el = document.getElementById('narrative-box');
+  el.innerHTML += `<p style="color:var(--gold-dim);font-style:italic;font-size:0.86rem;border-top:1px solid var(--border);padding-top:0.8rem;margin-top:0.8rem;">${texts[which]}</p>`;
+  el.scrollIntoView({behavior:'smooth', block:'end'});
+}
+
+/* ══════════════════════════════════
+   COMPOSER
+══════════════════════════════════ */
+const SEQ_NOTES = ['C5','B4','A4','G4','E4','C4'];
+const STEPS = 8;
+let seqGrid = Array.from({length:6}, () => new Array(STEPS).fill(false));
+let composerPlaying = false, composerInterval = null, currentStep = 0, bpm = 100;
+
+function unlockComposer() {
+  stopAmbient();
+  const el = document.getElementById('narrative-box');
+  el.innerHTML += `<p style="color:#a0e0a0;font-style:italic;">The great doors swing open. Beyond, golden light pours from a chamber where an ancient instrument awaits…</p>`;
+
+  // Show toast
+  showToast('Chamber Unsealed');
+
+  setTimeout(() => {
+    playWhoosh();
+    showScreen('composer-screen');
+    buildSequencer();
+    setTimeout(startAmbient, 600);
+  }, 1600);
+}
+
+function buildSequencer() {
+  const el = document.getElementById('sequencer');
+  el.innerHTML = '';
+  SEQ_NOTES.forEach((note, row) => {
+    const label = document.createElement('div');
+    label.className = 'seq-label';
+    label.textContent = note.replace('4','').replace('5','ˈ');
+    el.appendChild(label);
+    for (let col=0; col<STEPS; col++) {
+      const cell = document.createElement('div');
+      cell.className = 'seq-cell';
+      cell.dataset.row = row; cell.dataset.col = col;
+      cell.addEventListener('pointerdown', () => toggleCell(row, col, cell));
+      el.appendChild(cell);
+    }
+  });
+}
+
+function toggleCell(row, col, el) {
+  seqGrid[row][col] = !seqGrid[row][col];
+  el.classList.toggle('on', seqGrid[row][col]);
+  el.classList.add('trigger-play');
+  setTimeout(() => el.classList.remove('trigger-play'), 200);
+  if (seqGrid[row][col]) playNote(SEQ_NOTES[row], 0.3);
+}
+
+function toggleComposer() {
+  playClick();
+  composerPlaying = !composerPlaying;
+  document.getElementById('play-btn').textContent = composerPlaying ? '■ Stop' : '▶ Play';
+  composerPlaying ? runComposer() : stopComposer();
+}
+
+function runComposer() {
+  const ms = (60/bpm)*500;
+  currentStep = 0;
+  composerInterval = setInterval(() => {
+    document.querySelectorAll('.seq-cell').forEach(c => c.classList.remove('playing'));
+    for (let row=0; row<6; row++) {
+      if (seqGrid[row][currentStep]) {
+        playNote(SEQ_NOTES[row], (ms/1000)*0.85);
+        document.querySelector(`[data-row="${row}"][data-col="${currentStep}"]`)?.classList.add('playing');
+      }
+    }
+    currentStep = (currentStep+1) % STEPS;
+  }, ms);
+}
+
+function stopComposer() {
+  clearInterval(composerInterval);
+  document.querySelectorAll('.seq-cell').forEach(c => c.classList.remove('playing'));
+}
+
+function updateTempo(val) {
+  bpm = parseInt(val);
+  document.getElementById('tempo-val').textContent = val;
+  if (composerPlaying) { stopComposer(); runComposer(); }
+}
+
+function clearSequencer() {
+  playClick();
+  seqGrid = Array.from({length:6}, () => new Array(STEPS).fill(false));
+  document.querySelectorAll('.seq-cell').forEach(c => c.classList.remove('on','playing'));
+}
+
+function nextLevel() {
+  playClick();
+  stopComposer();
+  stopAmbient();
+  setTimeout(()=>{ window.location.href='resonance-level2.html'; }, 300);
+}
+
+/* ══════════════════════════════════
+   TOAST
+══════════════════════════════════ */
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ══════════════════════════════════
+   ADD BUTTON CLICK SOUNDS TO ALL BTNS
+══════════════════════════════════ */
+document.querySelectorAll('.btn').forEach(btn => {
+  btn.addEventListener('pointerdown', () => {
+    if (!btn.onclick && !btn.getAttribute('onclick')) playClick();
+  });
+});
+</script>
+</body>
+</html>
